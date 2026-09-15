@@ -1,7 +1,7 @@
 # Проект Neato D9 — управление роботом-пылесосом
 
-**Цель:** получить локальное управление роботом-пылесосом Neato D9 по Bluetooth и WiFi после отключения
-облака Neato. **Метод:** BLE-сниффинг (nRF52840) + `bleak` (GATT) + разбор доступных путей.
+**Цель (оператор, 2026-09-15):** научиться управлять роботом-пылесосом Neato по Bluetooth и WiFi.
+**Метод:** BLE-сниффинг (nRF52840) + `bleak` (GATT) + разбор доступных путей.
 
 ## Устройство
 
@@ -9,8 +9,7 @@
 FCC ID N6C-SDPAC. Поколение Gen4 (D8/D9/D10, Vorwerk). Внутри — Linux на NXP i.MX (Yocto «Neato LEGO
 Distro», ядро 5.4). Полные факты: [`device-facts.md`](device-facts.md).
 
-В сети виден по WiFi как «Neato-Robot»; по BLE рекламируется как `Neato Robot Services` (OUI `08:3A:88`
-= Neato Robotics).
+В сети виден по WiFi как «Neato-Robot»; по BLE рекламируется как `Neato Robot Services` (OUI `08:3A:88` = Neato Robotics).
 
 ## Статус путей управления (на 2026-09-15)
 
@@ -23,13 +22,19 @@ Distro», ядро 5.4). Полные факты: [`device-facts.md`](device-fac
 | OpenNeato / fang (UART-мост ESP32) | ✗ **D9 не поддержан** | «D8/D9/D10 NOT supported — different board, password-locked serial port» |
 | BLE-управление | ✗ **только онбординг** | GATT снят с робота: WiFi-настройка + Linking, команд уборки НЕТ. [`research/ble-vector.md`](research/ble-vector.md) |
 | **Kobold/Vorwerk API v2** | **? живое облако** | Облако Kobold РАБОТАЕТ (команды есть); вопрос — примет ли D9. [`research/kobold-vr7.md`](research/kobold-vr7.md) |
-| **Serial/UART (аппаратный)** | **? глубокий RE** | Linux i.MX, консоль под логином. Вскрытие + пайка. [`research/serial-hardware-vector.md`](research/serial-hardware-vector.md) |
+| Serial/UART к Linux | ✗ **вероятно тупик** | Signed firmware + secure boot + залоченная консоль (2 Gen4-эксперимента). Моторный API на Gen4 не выведен. [`research/serial-hardware-vector.md`](research/serial-hardware-vector.md) |
+| Kobold/Vorwerk облако | ✗ **не примет D9** | Облако живо, но Neato не проходит валидацию как «genuine Kobold»; прошивку не залить (secure boot). [`research/kobold-vr7.md`](research/kobold-vr7.md) |
+| **Vacuula server (self-hosted облако)** | **✅ на подходе, поддержит Gen4** | Сообщество Vacuula (ex-Brainslug) делает замену облака; релиз ~18.09.2026; D9 явно в списке. [`research/community-vacuula-server.md`](research/community-vacuula-server.md) |
+| Трюк reboot + play | ⚡ работает сейчас | Перезагрузка + сразу play → уборка в eco-режиме (тонкий тайминг). Запуск без облака уже сегодня. |
+| ESP32 на физ. кнопку | ✅ реалистично | Start/Stop из Home Assistant, без карт. |
+| Brain-transplant (RPi+ROS2) | ⚙ большой проект | Заменить электронику, оставить механику/лидар. [`research/deep-research-summary.md`](research/deep-research-summary.md) |
 
-**Краткий вывод:** штатные пути Neato (облако, локальный API, BLE-команды, community-мосты) — доказанные
-тупики. BLE-карта снята с самого робота: там только онбординг (настройка WiFi + привязка), команд уборки нет.
-Остаются два непроверенных вектора: (1) **живое облако Kobold/Vorwerk API v2** — примет ли оно Neato D9
-(самый перспективный, неинвазивный); (2) аппаратный UART-доступ к Linux (перспективный по возможностям,
-но требует вскрытия и обхода пароля консоли).
+**Краткий вывод:** штатных мозгов D9 (Linux/i.MX, signed, secure boot) в одиночку не вскрыть — все пути через
+штатные интерфейсы Neato тупиковые (облако мертво, BLE только онбординг, Kobold не принимает Neato, serial
+залочен, root по UART пока ни у кого). **НО управлять D9 всё же получится:** сообщество Vacuula (ex-Brainslug,
+авторы `fang`) выпускает **self-hosted сервер-замену облака с поддержкой Gen4/D9**, релиз ожидался ~18.09.2026.
+**План: дождаться релиза, следить за Discord #updates, поставить сервер по их инструкции** — неинвазивно.
+Уже сейчас уборку можно запускать трюком reboot+play. Детали — [`research/community-vacuula-server.md`](research/community-vacuula-server.md).
 
 ## Структура
 
@@ -42,5 +47,5 @@ Distro», ядро 5.4). Полные факты: [`device-facts.md`](device-fac
 ## Приватность
 
 Это публичная, обезличенная версия проекта: серийный номер, конкретные MAC-адреса (оставлен только
-публичный OUI `08:3A:88` Neato), топология домашней сети и BLE-дампы с ключами/SSID из неё удалены.
+публичный OUI `08:3A:88` Neato), топология домашней сети и BLE-дампы с ключами/SSID удалены.
 Если воспроизводите на своём роботе — подставьте свои значения в `scripts/`.
