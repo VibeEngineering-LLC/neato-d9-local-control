@@ -3,11 +3,19 @@
 **Цель (оператор, 2026-09-15):** научиться управлять роботом-пылесосом Neato по Bluetooth и WiFi.
 **Метод:** BLE-сниффинг (nRF52840) + `bleak` (GATT) + разбор доступных путей.
 
-## Устройство
+## Парк устройств оператора
 
-**Neato D9 Intelligent Robot Vacuum**, Part No. 905-0559, S/N <serial redacted>,
-FCC ID N6C-SDPAC. Поколение Gen4 (D8/D9/D10, Vorwerk). Внутри — Linux на NXP i.MX (Yocto «Neato LEGO
-Distro», ядро 5.4). Полные факты: [`device-facts.md`](device-facts.md).
+Три робота, ДВА разных поколения — и путь к локальному управлению у них разный:
+
+| Робот | Поколение | Локальное управление |
+|---|---|---|
+| **Neato D7 Connected** | **Gen3** | ✅ **решается СЕЙЧАС** готовыми проектами (fang / OpenNeato / neato-brainslug / vacuula v1): ESP32 на debug-порт, serial-API открыт |
+| **Neato D8** | **Gen4** | ⏳ ждёт vacuula server (~18.09.2026); та же ситуация, что D9 |
+| **Neato D9** Intelligent (905-0559) | **Gen4** | ⏳ ждёт vacuula server; штатные пути — тупики |
+
+Основной объект разбора ниже — **D9** (Gen4), D8 идентичен ему. D7 — отдельный, лёгкий случай:
+[`research/d7-gen3.md`](research/d7-gen3.md). Полные факты по D9: [`device-facts.md`](device-facts.md).
+Внутри Gen4 — Linux на NXP i.MX (Yocto «Neato LEGO Distro», ядро 5.4).
 
 В сети виден по WiFi как «Neato-Robot»; по BLE рекламируется как `Neato Robot Services` (OUI `08:3A:88` = Neato Robotics).
 
