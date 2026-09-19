@@ -41,9 +41,17 @@
 
 Все штатные интерфейсы Gen4 — тупики: облако мертво, BLE только онбординг, USB даёт лишь прошивку и
 5 недокументированных сервисных опкодов, serial залочен, Kobold не принимает. **Единственный барьер и для
-активации, и для локального управления — cert-pinning НА САМОМ РОБОТЕ:** приложение MyNeato сертификат не
+активации, и для локального управления — cert-check НА САМОМ РОБОТЕ:** приложение MyNeato сертификат не
 проверяет (fake-cloud для него тривиален), но робот отвергает чужой сервер. Обойти это без доступа к роботу
 (root/serial) нельзя.
+
+**Проверено экспериментом 19.09.2026 (лог + pcap):** локальный fake-orbital + DNS-подмена + серт, подписанный
+доверенным приложению CA — приложение полностью живёт на локальном сервере (авторизация, поллинг, команды);
+робот при обращении к 3443 отвечает `TLS alert unknown_ca` (код 48) → RST — с обоих сценариев (управление и
+онбординг нового робота). Детали и снятый REST-протокол управления —
+[`research/myneato-cloud-protocol.md`](research/myneato-cloud-protocol.md); сервер-заглушка —
+[`scripts/orbital_local_server.py`](scripts/orbital_local_server.py) (multiport 443/3443, лог TLS-handshake,
+разбор ability), mitmproxy addon для локального перехвата — [`scripts/mitm_neato_addon.py`](scripts/mitm_neato_addon.py).
 
 **Реалистичные пути вперёд:** (1) recovery-прошивка через USB-C — проверить, снимает ли требование активации
 у нового робота ([`research/official-manual-firmware-update.md`](research/official-manual-firmware-update.md));
@@ -59,7 +67,9 @@
 
 - [`device-facts.md`](device-facts.md) — факты об устройстве.
 - `research/` — разведка по каждому вектору с источниками (BLE, USB/MTP, активация, реверс APK, serial, облако, рынок замен).
-- `scripts/` — инструменты (только чтение): `neato_gatt_scan.py` (GATT по BLE), `usb_descriptors.py` (USB-дескрипторы),
+- `scripts/` — инструменты: `orbital_local_server.py` (standalone HTTPS-заглушка orbital, mp 443/3443,
+  TLS-handshake логируется), `mitm_neato_addon.py` (mitmproxy аддон для перехвата с патченого APK),
+  `neato_gatt_scan.py` (GATT по BLE), `usb_descriptors.py` (USB-дескрипторы),
   `neato_mtp_probe.py` / `neato_mtp_deviceinfo.py` (MTP-разведка через WPD-passthrough), `wpd_probe.py`.
 - `captures/` — где лежат BLE-захваты (сами pcap не публикуются — приватность).
 - `audit/project-incidents.md` — журнал багов проекта.
